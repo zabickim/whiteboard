@@ -29,5 +29,16 @@ export const Canvas = () => {
     return () => ro.disconnect();
   }, []);
 
-  return <canvas ref={canvasRef} className="w-full h-full block" />;
+  return (
+    <div className="relative w-full h-full">
+      <canvas ref={canvasRef} className="w-full h-full block" />
+      <div
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none select-none
+                      text-xs text-gray-400 bg-white/60 backdrop-blur-sm px-3 py-1 rounded-full
+                      transition-opacity duration-300"
+      >
+        Whiteboard. Kliknij i przeciągnij, aby rysować
+      </div>
+    </div>
+  );
 };
