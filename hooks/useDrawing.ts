@@ -1,25 +1,26 @@
 import { useEffect, useRef } from 'react';
 import type { Point } from '../types';
+import { useWhiteboardStore } from '@/store/useWhiteboardStore';
 
 export function useDrawing(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const isDown = useRef(false);
   const currentPoints = useRef<Point[]>([]);
 
+  const commitStroke = useWhiteboardStore((s) => s.commitStroke);
+  const config = useWhiteboardStore((s) => s.config);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const getPos = (e: PointerEvent) => {
+    const getPos = (e: PointerEvent): Point => {
       const r = canvas.getBoundingClientRect();
       return { x: e.clientX - r.left, y: e.clientY - r.top, t: Date.now() };
     };
 
-    const strokeStyle = '#000';
-    const lineWidth = 2;
-
     const applyStyle = (ctx: CanvasRenderingContext2D) => {
-      ctx.strokeStyle = strokeStyle;
-      ctx.lineWidth = lineWidth;
+      ctx.strokeStyle = config.color;
+      ctx.lineWidth = config.width;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
     };
@@ -43,7 +44,6 @@ export function useDrawing(canvasRef: React.RefObject<HTMLCanvasElement | null>)
       currentPoints.current.push(pos);
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
-      // Keep the path open for the next segment
       ctx.beginPath();
       applyStyle(ctx);
       ctx.moveTo(pos.x, pos.y);
@@ -52,6 +52,7 @@ export function useDrawing(canvasRef: React.RefObject<HTMLCanvasElement | null>)
     const onUp = () => {
       if (!isDown.current) return;
       isDown.current = false;
+      commitStroke(currentPoints.current);
       currentPoints.current = [];
     };
 
@@ -64,5 +65,5 @@ export function useDrawing(canvasRef: React.RefObject<HTMLCanvasElement | null>)
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
-  }, [canvasRef]);
+  }, [canvasRef, commitStroke, config]);
 }
