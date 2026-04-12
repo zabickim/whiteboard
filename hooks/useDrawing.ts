@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react';
 import type { Point } from '../types';
 import { useWhiteboardStore } from '@/store/useWhiteboardStore';
 
-export function useDrawing(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+export function useDrawing(
+  draftCanvasRef: React.RefObject<HTMLCanvasElement | null>,
+) {
   const isDown = useRef(false);
   const currentPoints = useRef<Point[]>([]);
 
@@ -10,7 +12,7 @@ export function useDrawing(canvasRef: React.RefObject<HTMLCanvasElement | null>)
   const config = useWhiteboardStore((s) => s.config);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = draftCanvasRef.current;
     if (!canvas) return;
 
     const getPos = (e: PointerEvent): Point => {
@@ -49,11 +51,18 @@ export function useDrawing(canvasRef: React.RefObject<HTMLCanvasElement | null>)
       ctx.moveTo(pos.x, pos.y);
     };
 
-    const onUp = () => {
+    const onUp = (e: PointerEvent) => {
       if (!isDown.current) return;
       isDown.current = false;
+
+      // Add the final point and commit to store
+      currentPoints.current.push(getPos(e));
       commitStroke(currentPoints.current);
       currentPoints.current = [];
+
+      // Clear draft canvas — committed canvas will be redrawn by useRedraw
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
 
     canvas.addEventListener('pointerdown', onDown);
@@ -65,5 +74,5 @@ export function useDrawing(canvasRef: React.RefObject<HTMLCanvasElement | null>)
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
-  }, [canvasRef, commitStroke, config]);
+  }, [draftCanvasRef, commitStroke, config]);
 }
