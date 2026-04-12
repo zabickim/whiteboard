@@ -1,9 +1,15 @@
-import { Canvas } from '@/components';
+'use client';
+
+import { Canvas, Toolbar } from '@/components';
+import { useKeyboardShortcuts } from '@/hooks';
 
 export default function Home() {
+  useKeyboardShortcuts();
+
   return (
-    <main className="w-screen h-screen overflow-hidden">
+    <main className="relative w-screen h-screen overflow-hidden">
       <Canvas />
+      <Toolbar />
     </main>
   );
 }
