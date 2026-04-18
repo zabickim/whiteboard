@@ -4,9 +4,9 @@ import { useRef } from 'react';
 import { useCanvasResize, useDrawing, useRedraw } from '@/hooks';
 
 export const Canvas = () => {
-  // committed canvas — all finalized strokes, redrawn from store by useRedraw
+  // committed canvas - all finalized strokes, redrawn from store by useRedraw
   const committedCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  // draft canvas — current in-progress stroke only, sits on top
+  // draft canvas - current in-progress stroke only, sits on top
   const draftCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useCanvasResize({ canvases: [committedCanvasRef, draftCanvasRef] });

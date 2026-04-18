@@ -27,7 +27,7 @@ export function renderStroke(ctx: CanvasRenderingContext2D, stroke: Stroke) {
     case 'ellipse':
       renderEllipse(ctx, stroke.points);
       break;
-    // eraser strokes are never stored — handled by eraseStrokesAt in store
+    // eraser strokes are never stored - handled by eraseStrokesAt in store
   }
 
   ctx.restore();
@@ -35,11 +35,28 @@ export function renderStroke(ctx: CanvasRenderingContext2D, stroke: Stroke) {
 
 function renderPencil(ctx: CanvasRenderingContext2D, points: Point[]) {
   if (points.length < 2) return;
+
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(points[i].x, points[i].y);
+
+  if (points.length === 2) {
+    ctx.lineTo(points[1].x, points[1].y);
+    ctx.stroke();
+    return;
   }
+
+  // Quadratic Bézier through midpoints - smooth freehand curve
+  for (let i = 1; i < points.length - 1; i++) {
+    const mid = {
+      x: (points[i].x + points[i + 1].x) / 2,
+      y: (points[i].y + points[i + 1].y) / 2,
+    };
+    ctx.quadraticCurveTo(points[i].x, points[i].y, mid.x, mid.y);
+  }
+
+  // Connect to the last point
+  const last = points[points.length - 1];
+  ctx.lineTo(last.x, last.y);
   ctx.stroke();
 }
 

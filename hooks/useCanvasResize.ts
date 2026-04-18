@@ -31,6 +31,6 @@ export function useCanvasResize({ canvases, containerRef }: CanvasRefs) {
     const ro = new ResizeObserver(resize);
     ro.observe(container);
     return () => ro.disconnect();
-    // canvases is a stable array of refs — intentionally omitted
+    // canvases is a stable array of refs - intentionally omitted
   }, []);
 }
