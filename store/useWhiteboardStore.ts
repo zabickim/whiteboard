@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import type { DrawingConfig, Point, Stroke, Tool } from '@/types';
+import { hitsStroke } from '@/lib/collision';
 
 type WhiteboardState = {
   strokes: Stroke[];
@@ -12,6 +13,7 @@ type WhiteboardState = {
 
 type WhiteboardActions = {
   commitStroke: (points: Point[]) => void;
+  eraseStrokesAt: (point: Point, radius: number) => void;
 
   undo: () => void;
   redo: () => void;
@@ -43,6 +45,7 @@ export const useWhiteboardStore = create<WhiteboardState & WhiteboardActions>()(
 
         const newStroke: Stroke = {
           id: uuidv4(),
+          tool: config.tool,
           color: config.color,
           width: config.width,
           points,
@@ -87,6 +90,19 @@ export const useWhiteboardStore = create<WhiteboardState & WhiteboardActions>()(
 
         set({
           strokes: [],
+          undoStack: [...undoStack, strokes],
+          redoStack: [],
+        });
+      },
+
+      eraseStrokesAt: (point, radius) => {
+        const { strokes, undoStack } = get();
+
+        const next = strokes.filter((s) => !hitsStroke(s, point, radius));
+        if (next.length === strokes.length) return; // nothing erased
+
+        set({
+          strokes: next,
           undoStack: [...undoStack, strokes],
           redoStack: [],
         });

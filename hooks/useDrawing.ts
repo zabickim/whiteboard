@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
-import type { Point } from '../types';
+import type { Point, Stroke } from '../types';
 import { useWhiteboardStore } from '@/store/useWhiteboardStore';
+import { clearCanvas, renderStroke } from '@/lib/rendering';
 
-export function useDrawing(
-  draftCanvasRef: React.RefObject<HTMLCanvasElement | null>,
-) {
+const ERASER_RADIUS = 20;
+
+export function useDrawing(draftCanvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const isDown = useRef(false);
+  const startPoint = useRef<Point | null>(null);
   const currentPoints = useRef<Point[]>([]);
 
   const commitStroke = useWhiteboardStore((s) => s.commitStroke);
+  const eraseStrokesAt = useWhiteboardStore((s) => s.eraseStrokesAt);
   const config = useWhiteboardStore((s) => s.config);
 
   useEffect(() => {
@@ -20,49 +23,68 @@ export function useDrawing(
       return { x: e.clientX - r.left, y: e.clientY - r.top, t: Date.now() };
     };
 
-    const applyStyle = (ctx: CanvasRenderingContext2D) => {
-      ctx.strokeStyle = config.color;
-      ctx.lineWidth = config.width;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
+    // Render a live preview of the current stroke on the draft canvas
+    const renderDraft = (points: Point[]) => {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      clearCanvas(canvas);
+
+      const draftStroke: Stroke = {
+        id: 'draft',
+        tool: config.tool,
+        color: config.color,
+        width: config.width,
+        points,
+      };
+      renderStroke(ctx, draftStroke);
     };
 
     const onDown = (e: PointerEvent) => {
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
       isDown.current = true;
       const pos = getPos(e);
+      startPoint.current = pos;
       currentPoints.current = [pos];
-      ctx.beginPath();
-      applyStyle(ctx);
-      ctx.moveTo(pos.x, pos.y);
+
+      if (config.tool === 'eraser') {
+        eraseStrokesAt(pos, ERASER_RADIUS);
+      }
     };
 
     const onMove = (e: PointerEvent) => {
       if (!isDown.current) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
       const pos = getPos(e);
-      currentPoints.current.push(pos);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-      ctx.beginPath();
-      applyStyle(ctx);
-      ctx.moveTo(pos.x, pos.y);
+
+      if (config.tool === 'eraser') {
+        eraseStrokesAt(pos, ERASER_RADIUS);
+        return;
+      }
+
+      if (config.tool === 'pencil') {
+        currentPoints.current.push(pos);
+        renderDraft(currentPoints.current);
+      } else {
+        // line / rect / ellipse - only start + current end
+        renderDraft([startPoint.current!, pos]);
+      }
     };
 
     const onUp = (e: PointerEvent) => {
       if (!isDown.current) return;
       isDown.current = false;
 
-      // Add the final point and commit to store
-      currentPoints.current.push(getPos(e));
-      commitStroke(currentPoints.current);
-      currentPoints.current = [];
+      const pos = getPos(e);
 
-      // Clear draft canvas — committed canvas will be redrawn by useRedraw
-      const ctx = canvas.getContext('2d');
-      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (config.tool !== 'eraser') {
+        const finalPoints =
+          config.tool === 'pencil' ? [...currentPoints.current, pos] : [startPoint.current!, pos];
+
+        commitStroke(finalPoints);
+      }
+
+      clearCanvas(canvas);
+      startPoint.current = null;
+      currentPoints.current = [];
     };
 
     canvas.addEventListener('pointerdown', onDown);
@@ -74,5 +96,5 @@ export function useDrawing(
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
-  }, [draftCanvasRef, commitStroke, config]);
+  }, [draftCanvasRef, commitStroke, eraseStrokesAt, config]);
 }

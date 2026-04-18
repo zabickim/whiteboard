@@ -1,11 +1,21 @@
 'use client';
 
+import type { Tool } from '@/types';
 import { useWhiteboardStore } from '@/store/useWhiteboardStore';
 
 const PRESET_WIDTHS = [2, 5, 10, 20];
 
+const TOOLS: { tool: Tool; title: string; icon: React.ReactNode }[] = [
+  { tool: 'pencil', title: 'Ołówek', icon: <PencilIcon /> },
+  { tool: 'line', title: 'Linia', icon: <LineIcon /> },
+  { tool: 'rect', title: 'Prostokąt', icon: <RectIcon /> },
+  { tool: 'ellipse', title: 'Elipsa', icon: <EllipseIcon /> },
+  { tool: 'eraser', title: 'Gumka', icon: <EraserIcon /> },
+];
+
 export const Toolbar = () => {
   const config = useWhiteboardStore((s) => s.config);
+  const setTool = useWhiteboardStore((s) => s.setTool);
   const setColor = useWhiteboardStore((s) => s.setColor);
   const setWidth = useWhiteboardStore((s) => s.setWidth);
   const undo = useWhiteboardStore((s) => s.undo);
@@ -22,34 +32,48 @@ export const Toolbar = () => {
                  border border-gray-200 rounded-2xl
                  px-4 py-2 shadow-md"
     >
-      {/* Undo */}
+      {/* Undo / Redo */}
       <ToolbarButton onClick={undo} disabled={!canUndo} title="Cofnij (Ctrl+Z)">
         <UndoIcon />
       </ToolbarButton>
-
-      {/* Redo */}
       <ToolbarButton onClick={redo} disabled={!canRedo} title="Ponów (Ctrl+Y)">
         <RedoIcon />
       </ToolbarButton>
 
       <Divider />
 
-      {/* Color picker */}
-      <label className="cursor-pointer" title="Kolor">
-        <div
-          className="w-7 h-7 rounded-full border-2 border-gray-300 overflow-hidden"
-          style={{ backgroundColor: config.color }}
-        >
-          <input
-            type="color"
-            value={config.color}
-            onChange={(e) => setColor(e.target.value)}
-            className="opacity-0 w-full h-full cursor-pointer"
-          />
-        </div>
-      </label>
+      {/* Tool selection */}
+      <div className="flex items-center gap-1">
+        {TOOLS.map(({ tool, title, icon }) => (
+          <ToolbarButton
+            key={tool}
+            onClick={() => setTool(tool)}
+            title={title}
+            active={config.tool === tool}
+          >
+            {icon}
+          </ToolbarButton>
+        ))}
+      </div>
 
       <Divider />
+
+      {/* Color picker */}
+      {config.tool !== 'eraser' && (
+        <label className="cursor-pointer" title="Kolor">
+          <div
+            className="w-7 h-7 rounded-full border-2 border-gray-300 overflow-hidden"
+            style={{ backgroundColor: config.color }}
+          >
+            <input
+              type="color"
+              value={config.color}
+              onChange={(e) => setColor(e.target.value)}
+              className="opacity-0 w-full h-full cursor-pointer"
+            />
+          </div>
+        </label>
+      )}
 
       {/* Stroke width presets */}
       <div className="flex items-center gap-2">
@@ -84,6 +108,7 @@ export const Toolbar = () => {
 type ToolbarButtonProps = {
   onClick: () => void;
   disabled?: boolean;
+  active?: boolean;
   title?: string;
   className?: string;
   children: React.ReactNode;
@@ -92,6 +117,7 @@ type ToolbarButtonProps = {
 const ToolbarButton = ({
   onClick,
   disabled,
+  active,
   title,
   className = '',
   children,
@@ -103,6 +129,7 @@ const ToolbarButton = ({
     className={`p-1.5 rounded-lg transition-colors
                 disabled:opacity-30 disabled:cursor-not-allowed
                 hover:bg-gray-100 active:bg-gray-200
+                ${active ? 'bg-blue-100 text-blue-600' : ''}
                 ${className}`}
   >
     {children}
@@ -111,52 +138,134 @@ const ToolbarButton = ({
 
 const Divider = () => <div className="w-px h-5 bg-gray-200" />;
 
-const UndoIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 7v6h6" />
-    <path d="M3 13a9 9 0 1 0 2.83-6.36L3 9" />
-  </svg>
-);
-
-const RedoIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M21 7v6h-6" />
-    <path d="M21 13a9 9 0 1 1-2.83-6.36L21 9" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6l-1 14H6L5 6" />
-    <path d="M10 11v6M14 11v6" />
-    <path d="M9 6V4h6v2" />
-  </svg>
-);
+function UndoIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 7v6h6" />
+      <path d="M3 13a9 9 0 1 0 2.83-6.36L3 9" />
+    </svg>
+  );
+}
+function RedoIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 7v6h-6" />
+      <path d="M21 13a9 9 0 1 1-2.83-6.36L21 9" />
+    </svg>
+  );
+}
+function PencilIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    </svg>
+  );
+}
+function LineIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="5" y1="19" x2="19" y2="5" />
+    </svg>
+  );
+}
+function RectIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+    </svg>
+  );
+}
+function EllipseIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <ellipse cx="12" cy="12" rx="10" ry="6" />
+    </svg>
+  );
+}
+function EraserIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 20H7L3 16l10-10 7 7-2.5 2.5" />
+      <path d="M6.0001 17.0001 17 6" />
+    </svg>
+  );
+}
+function TrashIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4h6v2" />
+    </svg>
+  );
+}
