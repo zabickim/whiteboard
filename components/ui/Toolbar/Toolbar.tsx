@@ -2,6 +2,16 @@
 
 import type { Tool } from '@/types';
 import { useWhiteboardStore } from '@/store/useWhiteboardStore';
+import {
+  UndoIcon,
+  RedoIcon,
+  PencilIcon,
+  LineIcon,
+  RectIcon,
+  EllipseIcon,
+  EraserIcon,
+  TrashIcon,
+} from '@/components/ui/icons';
 
 const PRESET_WIDTHS = [2, 5, 10, 20];
 
@@ -137,135 +147,3 @@ const ToolbarButton = ({
 );
 
 const Divider = () => <div className="w-px h-5 bg-gray-200" />;
-
-function UndoIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 7v6h6" />
-      <path d="M3 13a9 9 0 1 0 2.83-6.36L3 9" />
-    </svg>
-  );
-}
-function RedoIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 7v6h-6" />
-      <path d="M21 13a9 9 0 1 1-2.83-6.36L21 9" />
-    </svg>
-  );
-}
-function PencilIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-    </svg>
-  );
-}
-function LineIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    >
-      <line x1="5" y1="19" x2="19" y2="5" />
-    </svg>
-  );
-}
-function RectIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-    </svg>
-  );
-}
-function EllipseIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <ellipse cx="12" cy="12" rx="10" ry="6" />
-    </svg>
-  );
-}
-function EraserIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 20H7L3 16l10-10 7 7-2.5 2.5" />
-      <path d="M6.0001 17.0001 17 6" />
-    </svg>
-  );
-}
-function TrashIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v6M14 11v6" />
-      <path d="M9 6V4h6v2" />
-    </svg>
-  );
-}
