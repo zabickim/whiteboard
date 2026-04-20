@@ -4,6 +4,7 @@ import { renderStroke } from '@/lib/rendering';
 
 export function useRedraw(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const strokes = useWhiteboardStore((s) => s.strokes);
+  const viewport = useWhiteboardStore((s) => s.viewport);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -12,7 +13,18 @@ export function useRedraw(canvasRef: React.RefObject<HTMLCanvasElement | null>) 
     const redraw = () => {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const dpr = window.devicePixelRatio || 1;
+      const { scale, offsetX, offsetY } = viewport;
+
+      ctx.setTransform(scale * dpr, 0, 0, scale * dpr, offsetX * dpr, offsetY * dpr);
+      ctx.clearRect(
+        -offsetX / scale,
+        -offsetY / scale,
+        canvas.width / (scale * dpr),
+        canvas.height / (scale * dpr),
+      );
+
       for (const stroke of strokes) {
         renderStroke(ctx, stroke);
       }
@@ -23,5 +35,5 @@ export function useRedraw(canvasRef: React.RefObject<HTMLCanvasElement | null>) 
     const ro = new ResizeObserver(redraw);
     ro.observe(canvas);
     return () => ro.disconnect();
-  }, [strokes, canvasRef]);
+  }, [strokes, viewport, canvasRef]);
 }

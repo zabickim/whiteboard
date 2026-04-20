@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { DrawingConfig, Point, Stroke, Tool } from '@/types';
+import type { DrawingConfig, Point, Stroke, Tool, Viewport } from '@/types';
+import { DEFAULT_VIEWPORT } from '@/types';
 import { hitsStroke } from '@/lib/collision';
 
 type WhiteboardState = {
@@ -9,6 +10,7 @@ type WhiteboardState = {
   undoStack: Stroke[][];
   redoStack: Stroke[][];
   config: DrawingConfig;
+  viewport: Viewport;
 };
 
 type WhiteboardActions = {
@@ -22,6 +24,9 @@ type WhiteboardActions = {
   setTool: (tool: Tool) => void;
   setColor: (color: string) => void;
   setWidth: (width: number) => void;
+
+  setViewport: (viewport: Partial<Viewport>) => void;
+  resetViewport: () => void;
 };
 
 const DEFAULT_CONFIG: DrawingConfig = {
@@ -38,6 +43,7 @@ export const useWhiteboardStore = create<WhiteboardState & WhiteboardActions>()(
         undoStack: [],
         redoStack: [],
         config: DEFAULT_CONFIG,
+        viewport: DEFAULT_VIEWPORT,
 
         commitStroke: (points) => {
           if (points.length < 2) return;
@@ -100,7 +106,7 @@ export const useWhiteboardStore = create<WhiteboardState & WhiteboardActions>()(
           const { strokes, undoStack } = get();
 
           const next = strokes.filter((s) => !hitsStroke(s, point, radius));
-          if (next.length === strokes.length) return; // nothing erased
+          if (next.length === strokes.length) return;
 
           set({
             strokes: next,
@@ -112,10 +118,13 @@ export const useWhiteboardStore = create<WhiteboardState & WhiteboardActions>()(
         setTool: (tool) => set((s) => ({ config: { ...s.config, tool } })),
         setColor: (color) => set((s) => ({ config: { ...s.config, color } })),
         setWidth: (width) => set((s) => ({ config: { ...s.config, width } })),
+
+        setViewport: (vp) => set((s) => ({ viewport: { ...s.viewport, ...vp } })),
+        resetViewport: () => set({ viewport: DEFAULT_VIEWPORT }),
       }),
       {
         name: 'whiteboard-strokes',
-        // Persist only strokes — undo/redo history and config reset on refresh
+        // Persist only strokes - undo/redo history, config and viewport reset on refresh
         partialize: (state) => ({ strokes: state.strokes }),
         onRehydrateStorage: () => (state) => {
           if (state && !Array.isArray(state.strokes)) {

@@ -13,6 +13,7 @@ export function useDrawing(draftCanvasRef: React.RefObject<HTMLCanvasElement | n
   const commitStroke = useWhiteboardStore((s) => s.commitStroke);
   const eraseStrokesAt = useWhiteboardStore((s) => s.eraseStrokesAt);
   const config = useWhiteboardStore((s) => s.config);
+  const viewport = useWhiteboardStore((s) => s.viewport);
 
   useEffect(() => {
     const canvas = draftCanvasRef.current;
@@ -20,7 +21,15 @@ export function useDrawing(draftCanvasRef: React.RefObject<HTMLCanvasElement | n
 
     const getPos = (e: PointerEvent): Point => {
       const r = canvas.getBoundingClientRect();
-      return { x: e.clientX - r.left, y: e.clientY - r.top, t: Date.now() };
+      const screenX = e.clientX - r.left;
+      const screenY = e.clientY - r.top;
+      // Convert screen → world coordinates (inverse viewport transform)
+      const { scale, offsetX, offsetY } = viewport;
+      return {
+        x: (screenX - offsetX) / scale,
+        y: (screenY - offsetY) / scale,
+        t: Date.now(),
+      };
     };
 
     // Render a live preview of the current stroke on the draft canvas
@@ -29,6 +38,10 @@ export function useDrawing(draftCanvasRef: React.RefObject<HTMLCanvasElement | n
       if (!ctx) return;
 
       clearCanvas(canvas);
+
+      const dpr = window.devicePixelRatio || 1;
+      const { scale, offsetX, offsetY } = viewport;
+      ctx.setTransform(scale * dpr, 0, 0, scale * dpr, offsetX * dpr, offsetY * dpr);
 
       const draftStroke: Stroke = {
         id: 'draft',
@@ -96,5 +109,5 @@ export function useDrawing(draftCanvasRef: React.RefObject<HTMLCanvasElement | n
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
-  }, [draftCanvasRef, commitStroke, eraseStrokesAt, config]);
+  }, [draftCanvasRef, commitStroke, eraseStrokesAt, config, viewport]);
 }
