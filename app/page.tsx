@@ -1,6 +1,6 @@
 'use client';
 
-import { Canvas, Toolbar } from '@/components';
+import { Canvas } from '@/components';
 import { useKeyboardShortcuts } from '@/hooks';
 
 export default function Home() {
@@ -9,7 +9,6 @@ export default function Home() {
   return (
     <main className="relative w-screen h-screen overflow-hidden">
       <Canvas />
-      <Toolbar />
     </main>
   );
 }

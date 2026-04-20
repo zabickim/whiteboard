@@ -11,6 +11,7 @@ import {
   EllipseIcon,
   EraserIcon,
   TrashIcon,
+  ExportIcon,
 } from '@/components/ui/icons';
 
 const PRESET_WIDTHS = [2, 5, 10, 20];
@@ -23,7 +24,11 @@ const TOOLS: { tool: Tool; title: string; icon: React.ReactNode }[] = [
   { tool: 'eraser', title: 'Gumka', icon: <EraserIcon /> },
 ];
 
-export const Toolbar = () => {
+type ToolbarProps = {
+  onExportPng: () => void;
+};
+
+export const Toolbar = ({ onExportPng }: ToolbarProps) => {
   const config = useWhiteboardStore((s) => s.config);
   const setTool = useWhiteboardStore((s) => s.setTool);
   const setColor = useWhiteboardStore((s) => s.setColor);
@@ -108,6 +113,13 @@ export const Toolbar = () => {
         className="text-red-400 hover:text-red-600"
       >
         <TrashIcon />
+      </ToolbarButton>
+
+      <Divider />
+
+      {/* Export PNG */}
+      <ToolbarButton onClick={onExportPng} title="Pobierz jako PNG">
+        <ExportIcon />
       </ToolbarButton>
     </div>
   );
